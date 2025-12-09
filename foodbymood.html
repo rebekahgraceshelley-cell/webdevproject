@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mood-Based Recipe Suggestor</title>
+    <style>
+        /* CSS for Styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7f9;
+            transition: background-color 0.5s ease; 
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 800px; 
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .mood-buttons {
+            display: flex;
+            justify-content: center; 
+            flex-wrap: wrap;
+            gap: 15px; 
+            margin-bottom: 40px;
+        }
+
+        .mood-btn {
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 140px; 
+        }
+
+        .mood-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Specific mood button styles */
+        .mood-btn.happy { background-color: #ffcc00; }
+        .mood-btn.tired { background-color: #99ccff; }
+        .mood-btn.calm { background-color: #66cc66; }
+        .mood-btn.adventurous { background-color: #ff9966; }
+        .mood-btn.sad { background-color: #c9a0dc; } 
+        .mood-btn.sick { background-color: #ffe0b2; } 
+        .mood-btn.energetic { background-color: #ff6347; } 
+        .mood-btn.surprise { 
+            background-color: #330066; 
+            color: white;
+            border: 3px dashed #ff00ff; 
+        }
+
+        #recipe-output {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 120px;
+            background-color: #f9f9f9;
+            border: 2px solid #ccc;
+            transition: all 0.5s ease;
+            text-align: left;
+        }
+
+        #recipe-output h3 {
+            color: #007BFF;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        #recipe-output p {
+            color: #555;
+            line-height: 1.6;
+        }
+        
+        .recipe-link-btn {
+            margin-top: 15px; 
+            padding: 10px 20px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+            text-decoration: none; /* Make it look like a button */
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <span class="subheader">
+       <a href="../Index.html" id="top">Home</a> |
+       <a href="hobbies.html">Hobbies</a> |
+       <a href="resume.html">Resume</a> |
+       <a href="#">Food By Mood</a> |
+       <a href="contact.html">Contact</a>
+       <br><br>
+   </span>
+    <div class="container">
+        <h1>What are you in the mood for?</h1>
+        <p>The time of day is: <strong id="time-display"></strong></p>
+
+        <div class="mood-buttons">
+            <button class="mood-btn happy" data-mood="happy">😊 Happy</button>
+            <button class="mood-btn tired" data-mood="tired">😴 Tired</button>
+            <button class="mood-btn calm" data-mood="calm">😌 Calm</button>
+            <button class="mood-btn adventurous" data-mood="adventurous">🌍 Adventurous</button>
+            <button class="mood-btn sad" data-mood="sad">😢 Sad</button>
+            <button class="mood-btn sick" data-mood="sick">🤒 Sick</button>
+            <button class="mood-btn energetic" data-mood="energetic">⚡ Energetic</button>
+            <button class="mood-btn surprise" data-mood="surprise">✨ Surprise Me!</button>
+        </div>
+
+        <div id="recipe-output">
+            <p>Select a mood above and we'll suggest a recipe for you!</p>
+        </div>
+    </div>
+
+    <script>
+        // --- RECIPE DATA ---
+        const moodRecipes = {
+            happy: {
+                // Dinner/Default
+                default: { name: "Celebratory Homemade Pizza", description: "A fun, hands-on project that rewards you with exactly what you want." },
+                // Breakfast (6-10 AM)
+                breakfast: { name: "Fancy French Toast with Berries", description: "Start the day with a treat! A simple but celebratory breakfast to match your mood." },
+                // Lunch (10 AM - 2 PM)
+                lunch: { name: "Gourmet Grilled Cheese & Tomato Soup", description: "A grown-up classic. Elevate your lunch with quality ingredients for a mid-day lift." }
+            },
+            tired: {
+                default: { name: "One-Pan Lemon Garlic Chicken and Veggies", description: "Minimal effort, maximum flavor. Everything cooks on one sheet pan for easy cleanup." },
+                breakfast: { name: "Overnight Oats (no cook!)", description: "Zero effort required in the morning. Prepare these the night before and enjoy immediately upon waking." },
+                lunch: { name: "Quick 5-Minute Tuna Salad Sandwich", description: "Protein-packed and simple to assemble. Low effort for low energy." }
+            },
+            calm: {
+                default: { name: "Slow-Cooker Beef Stew", description: "A comforting, hands-off meal that fills your home with a cozy aroma." },
+                breakfast: { name: "Warm Bowl of Oatmeal with Honey", description: "A simple, quiet breakfast to maintain your relaxed morning pace." },
+                lunch: { name: "Soothing Cucumber & Hummus Wrap", description: "Light, fresh, and easy to digest. Perfect for a peaceful midday meal." }
+            },
+            adventurous: {
+                default: { name: "Thai Green Curry with Tofu/Chicken", description: "Explore the vibrant flavors of Southeast Asia! A great way to spice up a regular weeknight meal." },
+                breakfast: { name: "Savory Kimchi Fried Rice", description: "A bold, flavorful twist on breakfast. Use leftover rice for a quick culinary adventure." },
+                lunch: { name: "Spicy Peruvian Chicken Sandwich (Aji Verde)", description: "Try something new! Intense flavor and a mild kick for an exciting lunch." }
+            },
+            sad: {
+                default: { name: "Classic Three-Ingredient Mac & Cheese", description: "The ultimate comfort food. Minimal cooking needed, maximum cheesy satisfaction." },
+                breakfast: { name: "Warm Banana Chocolate Chip Muffins", description: "A little warmth and sweetness to start the day. The smell alone is comforting." },
+                lunch: { name: "Easy Creamy Tomato Soup & Croutons", description: "Nourishing, warm, and requires almost zero mental effort." }
+            },
+            sick: {
+                default: { name: "Healing Ginger-Turmeric Broth", description: "Nourish your body with this simple, warm, and restorative broth." },
+                breakfast: { name: "Plain Toast and Herbal Tea", description: "Keep it simple and gentle on the stomach. Focus on hydration." },
+                lunch: { name: "Steaming Chicken Noodle Soup (Canned is fine!)", description: "The classic remedy. Warm, hydrating, and easy to consume when you’re not feeling well." }
+            },
+            energetic: {
+                default: { name: "Quick Black Bean Burgers on Whole Wheat Buns", description: "Fuel your focus with high-protein, fiber-rich patties. Fast to assemble and keeps your energy sustained." },
+                breakfast: { name: "High-Protein Smoothie with Spinach and Peanut Butter", description: "Pack maximum nutrients into one quick blend to power your busy morning." },
+                lunch: { name: "Hard-Boiled Egg and Avocado Salad", description: "A light, brain-fueling meal that won't cause an afternoon slump." }
+            },
+            surprise: {
+                default: { name: "Breakfast Burrito Bowl... for Dinner!", description: "Why stick to rules? It’s unexpected, easy, and completely satisfying at any time." },
+            }
+        };
+
+        const moodColors = {
+            happy: '#fff7e0', tired: '#e0f0ff', calm: '#e0ffe0', adventurous: '#ffebe0',
+            sad: '#f0e0ff', sick: '#fffaf0', energetic: '#ffefeb', surprise: '#e6e6fa' 
+        };
+
+        const buttons = document.querySelectorAll('.mood-btn');
+        const outputDiv = document.getElementById('recipe-output');
+        const body = document.body;
+        const timeDisplay = document.getElementById('time-display');
+
+        // --- TIME LOGIC AND FUNCTIONALITY ---
+
+        function getMealPeriod() {
+            const hour = new Date().getHours();
+            let period = 'default'; // Default is generally dinner/anytime
+
+            if (hour >= 6 && hour < 10) {
+                period = 'breakfast'; // 6 AM to 9:59 AM
+            } else if (hour >= 10 && hour < 14) {
+                period = 'lunch'; // 10 AM to 1:59 PM
+            }
+            return period;
+        }
+
+        function updateTimeDisplay() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            const period = getMealPeriod();
+            timeDisplay.textContent = `${timeString} (${period.toUpperCase()} Suggestion Active)`;
+        }
+
+        // Run once immediately and then every minute
+        updateTimeDisplay();
+        setInterval(updateTimeDisplay, 60000); 
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const mood = button.getAttribute('data-mood');
+                const mealPeriod = getMealPeriod();
+                
+                // Select the correct recipe based on mood AND time period
+                let recipeData = moodRecipes[mood][mealPeriod] || moodRecipes[mood].default;
+
+                const recipeName = recipeData.name;
+                const recipeDescription = recipeData.description;
+                const color = moodColors[mood];
+
+                // Create the search URL for YouTube
+                const searchLink = `https://www.youtube.com/results?search_query=${encodeURIComponent(recipeName)} recipe`;
+
+                // 1. Update the background color dynamically
+                body.style.backgroundColor = color;
+                
+                // 2. Display the recipe suggestion and the functional link
+                outputDiv.innerHTML = `
+                    <h3>${mood === 'surprise' ? 'TA-DA! ' : 'Your Suggested Recipe: '}${recipeName}</h3>
+                    <p>${recipeDescription}</p>
+                    <a href="${searchLink}" target="_blank" class="recipe-link-btn" style="background-color: ${mood === 'surprise' ? '#ff00ff' : '#007BFF'};">View Recipe Details (Search on YouTube)</a>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
